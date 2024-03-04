@@ -33,9 +33,3 @@ export interface QuerySearchResult {
 	number_children?: number[];
 	number_room: number;
 }
-
-export interface Verification {
-	id: string;
-	expireAt: string;
-	verificationToken: string;
-}

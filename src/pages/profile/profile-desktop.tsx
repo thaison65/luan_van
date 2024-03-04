@@ -50,6 +50,8 @@ function ProfileDesktop({}: ProfileDesktopProps) {
 	const [gender, setGender] = useState<string>('');
 	const [birthday, setBirthday] = useState<Date>(new Date());
 
+	const [dataUpdated, setDataUpdated] = useState(false);
+
 	const [open, setOpen] = useState<boolean>(false);
 
 	useEffect(() => {
@@ -61,9 +63,7 @@ function ProfileDesktop({}: ProfileDesktopProps) {
 			setGender(profile?.data?.gender);
 			setBirthday(profile?.data?.birthday);
 		}
-
-		return;
-	}, [profile]);
+	}, [profile, dataUpdated]);
 
 	const handleClickOpen = () => {
 		setOpen(true);
@@ -107,31 +107,26 @@ function ProfileDesktop({}: ProfileDesktopProps) {
 		}
 	};
 
-	const handleCofirm = async () => {
-		const _id = profile?.data._id;
+	const handleSubmitFormUpdate = async (event: FormEvent<HTMLFormElement>) => {
+		event.preventDefault();
+
+		const _id = profile?.data?._id;
 
 		try {
-			if (fileImage) {
-				await updateUser({
-					_id,
-					email,
-					first_name,
-					last_name,
-					gender,
-					birthday,
-					img_url: fileImage,
-				});
-				window.location.reload();
-			}
+			await updateUser({
+				_id,
+				email,
+				first_name,
+				last_name,
+				gender,
+				birthday,
+				img_url: fileImage,
+			});
+			setDataUpdated(true);
 		} catch (error: unknown) {
 			console.log(error);
 		}
 		setOpen(false);
-	};
-
-	const handleSubmitFormUpdate = async (event: FormEvent<HTMLFormElement>) => {
-		event.preventDefault();
-		handleClickOpen();
 	};
 
 	return (
@@ -151,148 +146,143 @@ function ProfileDesktop({}: ProfileDesktopProps) {
 				</Typography>
 
 				<Box
-					component={'form'}
-					onSubmit={handleSubmitFormUpdate}
+					component={Paper}
+					mt={1}
+					p={2}
 				>
-					<Box
-						component={Paper}
-						mt={1}
-						p={2}
+					<Stack
+						direction={'row'}
+						alignItems={'center'}
 					>
-						<Stack
-							direction={'row'}
-							alignItems={'center'}
+						<Typography
+							variant="h6"
+							fontWeight={500}
+							flexGrow={1}
 						>
-							<Typography
-								variant="h6"
-								fontWeight={500}
-								flexGrow={1}
-							>
-								Dữ liệu cá nhân
-							</Typography>
-							<Stack alignItems={'center'}>
-								<Avatar
-									src={avatar}
-									sx={{ width: 45, height: 45 }}
+							Dữ liệu cá nhân
+						</Typography>
+						<Stack alignItems={'center'}>
+							<Avatar
+								src={avatar ? avatar : ''}
+								sx={{ width: 45, height: 45 }}
+							/>
+							<Button component={'label'}>
+								Thay đổi ảnh
+								<input
+									type="file"
+									hidden
+									onChange={handleChangeAvatar}
 								/>
-								<Button component={'label'}>
-									Thay đổi ảnh
-									<input
-										type="file"
-										hidden
-										onChange={handleChangeAvatar}
-									/>
-								</Button>
-							</Stack>
+							</Button>
 						</Stack>
+					</Stack>
 
-						<Divider sx={{ marginBottom: 2 }} />
+					<Divider sx={{ marginBottom: 2 }} />
 
-						<Box my={1}>
+					<Box my={1}>
+						<Grid
+							container
+							spacing={2}
+						>
 							<Grid
-								container
-								spacing={2}
+								md={8}
+								xs={12}
+								item
 							>
-								<Grid
-									md={8}
-									xs={12}
-									item
-								>
-									<Item elevation={0}>
-										<TextField
-											fullWidth
-											label={'Họ tên lót'}
-											id="txt_first_name"
-											name="first_name"
-											value={first_name}
-											onChange={handleChangeFirstName}
-										/>
-									</Item>
-								</Grid>
-								<Grid
-									item
-									md={4}
-									xs={12}
-								>
-									<Item elevation={0}>
-										<TextField
-											fullWidth
-											label={'Tên'}
-											id="txt_last_name"
-											name="last_name"
-											value={last_name}
-											onChange={handleChangeLastName}
-										/>
-									</Item>
-								</Grid>
+								<Item elevation={0}>
+									<TextField
+										fullWidth
+										label={'Họ tên lót'}
+										id="txt_first_name"
+										name="first_name"
+										value={first_name ? first_name : ''}
+										onChange={handleChangeFirstName}
+									/>
+								</Item>
 							</Grid>
 							<Grid
-								container
-								spacing={2}
-								mt={1}
+								item
+								md={4}
+								xs={12}
 							>
-								<Grid
-									item
-									md={6}
-									xs={12}
-								>
-									<FormControl fullWidth>
-										<InputLabel id="demo-simple-select-label">Giới tính</InputLabel>
-										<Select
-											labelId="demo-simple-select-label"
-											id="demo-simple-select"
-											value={gender ? gender : 'Male'}
-											label="Giới tính"
-											onChange={handleChangeGender}
-										>
-											<MenuItem value={'Male'}>Nam</MenuItem>
-											<MenuItem value={'Female'}>Nữ</MenuItem>
-											<MenuItem value={'Orther'}>Giới tính khác</MenuItem>
-										</Select>
-									</FormControl>
-								</Grid>
-								<Grid
-									item
-									md={6}
-									xs={12}
-								>
-									<Stack>
-										<LocalizationProvider dateAdapter={AdapterDayjs}>
-											<DatePicker
-												format="DD/MM/YYYY"
-												disableFuture
-												onChange={handleChangeBirthday}
-											/>
-										</LocalizationProvider>
-									</Stack>
-								</Grid>
+								<Item elevation={0}>
+									<TextField
+										fullWidth
+										label={'Tên'}
+										id="txt_last_name"
+										name="last_name"
+										value={last_name ? last_name : ''}
+										onChange={handleChangeLastName}
+									/>
+								</Item>
 							</Grid>
-							<Box mt={3}>
-								<TextField
-									fullWidth
-									label={'Địa chỉ E-mail'}
-									id="txt_email"
-									name="email"
-									type="email"
-									value={email}
-									onChange={handleChangeEmail}
-								/>
-							</Box>
+						</Grid>
+						<Grid
+							container
+							spacing={2}
+							mt={1}
+						>
+							<Grid
+								item
+								md={6}
+								xs={12}
+							>
+								<FormControl fullWidth>
+									<InputLabel id="demo-simple-select-label">Giới tính</InputLabel>
+									<Select
+										labelId="demo-simple-select-label"
+										id="demo-simple-select"
+										value={gender ? gender : 'Male'}
+										label="Giới tính"
+										onChange={handleChangeGender}
+									>
+										<MenuItem value={'Male'}>Nam</MenuItem>
+										<MenuItem value={'Female'}>Nữ</MenuItem>
+										<MenuItem value={'Orther'}>Giới tính khác</MenuItem>
+									</Select>
+								</FormControl>
+							</Grid>
+							<Grid
+								item
+								md={6}
+								xs={12}
+							>
+								<Stack>
+									<LocalizationProvider dateAdapter={AdapterDayjs}>
+										<DatePicker
+											format="DD/MM/YYYY"
+											disableFuture
+											onChange={handleChangeBirthday}
+										/>
+									</LocalizationProvider>
+								</Stack>
+							</Grid>
+						</Grid>
+						<Box mt={3}>
+							<TextField
+								fullWidth
+								label={'Địa chỉ E-mail'}
+								id="txt_email"
+								name="email"
+								type="email"
+								value={email ? email : ''}
+								onChange={handleChangeEmail}
+							/>
 						</Box>
 					</Box>
-					<Stack
-						alignItems={'end'}
-						marginTop={2}
-					>
-						<Button
-							type="submit"
-							variant="contained"
-							color="warning"
-						>
-							Cập nhập
-						</Button>
-					</Stack>
 				</Box>
+				<Stack
+					alignItems={'end'}
+					marginTop={2}
+				>
+					<Button
+						onClick={handleClickOpen}
+						variant="contained"
+						color="warning"
+					>
+						Cập nhập
+					</Button>
+				</Stack>
 			</Box>
 			<Dialog
 				open={open}
@@ -310,12 +300,12 @@ function ProfileDesktop({}: ProfileDesktopProps) {
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleClose}>Đóng</Button>
-					<Button
-						onClick={handleCofirm}
-						autoFocus
+					<Box
+						component={'form'}
+						onSubmit={handleSubmitFormUpdate}
 					>
-						Xác nhận
-					</Button>
+						<Button type="submit">Xác nhận</Button>
+					</Box>
 				</DialogActions>
 			</Dialog>
 		</Box>

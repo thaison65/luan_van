@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, MouseEvent, FormEvent, useRef } from 'react';
+import { useState, ChangeEvent, MouseEvent, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
@@ -16,20 +16,18 @@ import {
 	InputAdornment,
 	IconButton,
 	Divider,
-	Grid,
 	FormHelperText,
 	Dialog,
 	Alert,
 	AlertTitle,
 } from '@mui/material';
 
-import Visibility from '@mui/icons-material/Visibility';
-import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import FacebookIcon from '@mui/icons-material/Facebook';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
-import GoogleIcon from '~/images/google-icon-1.png';
+import bgImg from '~/images/Mui Ne beach_1085095151.jpg';
 
 import { InvalidPhoneException, InvalidPasswordException } from '~/utils';
 import { useAuth } from '~/hooks';
@@ -56,8 +54,6 @@ function LoginPage({}: LoginPageProps) {
 	const [alertFail, setAlertFail] = useState<boolean>(false);
 	const [openAlert, setOpenAlert] = useState<boolean>(false);
 
-	const handleClickShowPassword = () => setShowPassword((show) => !show);
-
 	const handleChangePhone = (event: ChangeEvent<{ value: unknown }>) => {
 		setPhone(event.target.value as string);
 	};
@@ -65,6 +61,8 @@ function LoginPage({}: LoginPageProps) {
 	const handleChangePassword = (event: ChangeEvent<{ value: unknown }>) => {
 		setPassword(event.target.value as string);
 	};
+
+	const handleClickShowPassword = () => setShowPassword((show) => !show);
 
 	const handleMouseDownPassword = (event: MouseEvent<HTMLButtonElement>) => {
 		event.preventDefault();
@@ -97,7 +95,6 @@ function LoginPage({}: LoginPageProps) {
 				console.log(error.message);
 				return;
 			}
-			console.log(error + ' login page');
 			setAlertFail(true);
 			handleOpenAlert();
 		}
@@ -156,151 +153,106 @@ function LoginPage({}: LoginPageProps) {
 					padding={4}
 					borderRadius={4}
 				>
-					<Typography
-						variant="h4"
-						component={'h1'}
-						fontWeight={500}
-						color={'#7f7f7f'}
-					>
-						Đăng nhập
-					</Typography>
-
 					<Stack
+						direction={'row'}
 						spacing={2}
-						width={'100%'}
 					>
-						<TextField
-							fullWidth
-							label={'Số điện thoại'}
-							id="txt_phone"
-							name="phone"
-							onChange={handleChangePhone}
-							error={phoneError ? true : false}
-							helperText={phoneError}
-							onFocus={() => setPhoneError('')}
+						<Image
+							src={bgImg}
+							alt=""
+							width={350}
+							height={400}
 						/>
-						<FormControl
-							sx={{ m: 1 }}
-							variant="outlined"
-							error={pwdError ? true : false}
+						<Divider orientation="horizontal" />
+
+						<Stack
+							spacing={2}
+							width={400}
 						>
-							<InputLabel htmlFor="outlined-adornment-password">Mật khẩu</InputLabel>
-							<OutlinedInput
-								fullWidth
-								id="outlined-adornment-password"
-								type={showPassword ? 'text' : 'password'}
-								name="password"
-								onChange={handleChangePassword}
-								onFocus={() => setPwdError('')}
-								endAdornment={
-									<InputAdornment position="end">
-										<IconButton
-											aria-label="toggle password visibility"
-											onClick={handleClickShowPassword}
-											onMouseDown={handleMouseDownPassword}
-											edge="end"
-										>
-											{showPassword ? <VisibilityOff /> : <Visibility />}
-										</IconButton>
-									</InputAdornment>
-								}
-								label="Mật khẩu"
-							/>
-							<FormHelperText>{pwdError}</FormHelperText>
-						</FormControl>
-						<Box
-							display={'flex'}
-							justifyContent={'end'}
-						>
-							<Link
-								style={{ textDecoration: 'none' }}
-								href={'/recover'}
-							>
-								<Typography
-									color={'#7f7f7f'}
-									sx={{ ':hover': { color: '#1976d2' } }}
-								>
-									Bạn quên mật khẩu?
-								</Typography>
-							</Link>
-						</Box>
-						<Stack direction={'row'}>
-							<Box
-								flexGrow={1}
-								display={'flex'}
-								alignItems={'center'}
-							>
-								<Link
-									style={{ textDecoration: 'none' }}
-									href={'/register'}
-								>
-									<Typography
-										color={theme.palette.primary.main}
-										sx={{
-											':hover': { color: '#7f7f7f', textDecoration: 'underline' },
-											flexGrow: 0,
-										}}
-									>
-										Tạo tài khoản
-									</Typography>
-								</Link>
-							</Box>
-							<Button
-								variant="contained"
-								sx={{ paddingX: 2 }}
-								type="submit"
+							<Typography
+								variant="h4"
+								component={'h1'}
+								fontWeight={500}
+								color={'#7f7f7f'}
 							>
 								Đăng nhập
-							</Button>
-						</Stack>
-
-						<Divider />
-						<Box>
-							<Typography
-								color={'#7f7f7f'}
-								textAlign={'center'}
-								mb={2}
-							>
-								Hoặc đăng nhập bằng
 							</Typography>
-							<Grid
-								container
-								spacing={1}
+
+							<Stack
+								spacing={2}
+								width={'100%'}
 							>
-								<Grid
-									item
-									md={6}
-									xs={12}
+								<TextField
+									fullWidth
+									label={'Số điện thoại'}
+									id="txt_phone"
+									name="phone"
+									onChange={handleChangePhone}
+									error={phoneError ? true : false}
+									helperText={phoneError}
+									onFocus={() => setPhoneError('')}
+								/>
+								<FormControl
+									sx={{ m: 1 }}
+									variant="outlined"
+									error={pwdError ? true : false}
 								>
+									<InputLabel htmlFor="outlined-adornment-password">Mật khẩu</InputLabel>
+									<OutlinedInput
+										fullWidth
+										id="outlined-adornment-password"
+										type={showPassword ? 'text' : 'password'}
+										name="password"
+										onChange={handleChangePassword}
+										onFocus={() => setPwdError('')}
+										endAdornment={
+											<InputAdornment position="end">
+												<IconButton
+													aria-label="toggle password visibility"
+													onClick={handleClickShowPassword}
+													onMouseDown={handleMouseDownPassword}
+													edge="end"
+												>
+													{showPassword ? <VisibilityOff /> : <Visibility />}
+												</IconButton>
+											</InputAdornment>
+										}
+										label="Mật khẩu"
+									/>
+									<FormHelperText>{pwdError}</FormHelperText>
+								</FormControl>
+
+								<Stack direction={'row'}>
 									<Box
-										component={Button}
-										fullWidth
-										variant="outlined"
+										flexGrow={1}
+										display={'flex'}
+										alignItems={'center'}
 									>
-										<Image
-											src={GoogleIcon}
-											alt="Google Icon"
-											style={{ width: '15px', height: '15px', marginRight: '8px' }}
-										/>
-										Google
+										<Link
+											style={{ textDecoration: 'none' }}
+											href={'/register'}
+										>
+											<Typography
+												color={theme.palette.primary.main}
+												sx={{
+													':hover': { color: '#7f7f7f', textDecoration: 'underline' },
+													flexGrow: 0,
+												}}
+											>
+												Tạo tài khoản
+											</Typography>
+										</Link>
 									</Box>
-								</Grid>
-								<Grid
-									item
-									md={6}
-									xs={12}
-								>
 									<Button
-										fullWidth
 										variant="contained"
-										sx={{ bgcolor: '#3B5998' }}
-										startIcon={<FacebookIcon />}
+										sx={{ paddingX: 2 }}
+										type="submit"
 									>
-										FaceBook
+										Đăng nhập
 									</Button>
-								</Grid>
-							</Grid>
-						</Box>
+								</Stack>
+							</Stack>
+						</Stack>
 					</Stack>
 				</Stack>
 			</Stack>

@@ -1,4 +1,4 @@
-import { ChangeEvent, useState, useRef, MouseEvent, useEffect, useContext } from 'react';
+import { ChangeEvent, useState, useRef, MouseEvent, useEffect } from 'react';
 import axios from 'axios';
 import {
 	Typography,
@@ -17,8 +17,6 @@ import { styled } from '@mui/material/styles';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import CloseIcon from '@mui/icons-material/Close';
 
-import { InputContext } from '~/components/common/home/hero';
-
 import useDebounce from '~/hooks/use-debounce';
 import { SearchResult } from '~/models/search';
 import { theme } from '~/utils';
@@ -36,8 +34,6 @@ type InputSearchPlaceProps = {
 };
 
 function InputSearchPlace({ onData }: InputSearchPlaceProps) {
-	const inputFocus = useContext(InputContext);
-
 	const [clearText, setClearText] = useState(false);
 	const [searchResult, setSearchResult] = useState<SearchResult[]>([]);
 	const [place, setPlace] = useState<string>('');
@@ -178,14 +174,24 @@ function InputSearchPlace({ onData }: InputSearchPlaceProps) {
 				zIndex={10}
 				position={'absolute'}
 				ref={boxRef}
-				display={`${anchorSearch ? 'block' : 'none'}`}
+				display={`${place !== '' && anchorSearch ? 'block' : 'none'}`}
+				minWidth={720}
 			>
+				<Box
+					py={2}
+					mx={3}
+				>
+					<Typography fontWeight={500}>Chọn địa điểm bạn muốn</Typography>
+				</Box>
+				<Box mx={1}>
+					<Typography>{searchResult ? null : 'Xin chờ đợi...'}</Typography>
+				</Box>
 				{searchResult.map((result) => {
 					return (
 						<MenuItem
 							key={result._id}
 							onClick={() => handleSetSearchID(result)}
-							sx={{ mx: 1, minWidth: 500 }}
+							sx={{ mx: 1 }}
 						>
 							<Stack>
 								<Box display={'flex'}>

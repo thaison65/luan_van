@@ -1,69 +1,35 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import {
-	Box,
-	Stack,
-	Paper,
-	Typography,
-	Rating,
-	Divider,
-	Button,
-	Checkbox,
-	Dialog,
-	DialogTitle,
-	DialogContent,
-	DialogContentText,
-	DialogActions,
-} from '@mui/material';
-import { red } from '@mui/material/colors';
+import { Box, Stack, Paper, Typography, Rating, Divider, Button } from '@mui/material';
 
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
-import Favorite from '@mui/icons-material/Favorite';
+import PeopleIcon from '@mui/icons-material/People';
+import BedIcon from '@mui/icons-material/Bed';
 
-import { HotelListResult } from '~/models/hotel';
-import { convertToVND, handleImage } from '~/utils/index';
+import { HotelListResult, RoomResult } from '~/models/hotel';
+import { calculateTotalPrice, convertToVND, groupedRooms } from '~/utils/index';
 import { theme } from '~/utils';
 import { useAuth } from '~/hooks';
+import { DialogAlertLogin } from '../components/dialog';
 
 interface PostProductProps {
 	valueHotel: HotelListResult;
+	number_adult: number;
+	number_children: number;
+	number_room: number;
 }
 
-const label = { inputProps: { 'aria-label': 'Checkbox demo' } };
+function PostProduct(props: PostProductProps) {
+	const { valueHotel, number_adult, number_children, number_room } = props;
 
-function PostProduct({ valueHotel }: PostProductProps) {
 	const { profile } = useAuth();
 	const router = useRouter();
 
-	const [totalPrice, setTotalPrice] = useState(() => {
-		if (valueHotel.discount === undefined) {
-			return parseInt(valueHotel.price);
-		}
-		if (valueHotel.discount?.discount_type === 'fixed') {
-			return parseInt(valueHotel.price) - valueHotel.discount?.price_max;
-		}
-		return (
-			parseInt(valueHotel.price) -
-			((valueHotel.discount?.discount * parseInt(valueHotel.price)) / 100 <
-			valueHotel.discount.price_max
-				? (valueHotel.discount?.discount * parseInt(valueHotel.price)) / 100
-				: valueHotel.discount.price_max)
-		);
-	});
+	// Sử dụng hàm để tính toán totalPrice
+	const totalPrice = calculateTotalPrice(valueHotel);
 
-	const [discount, setDiscount] = useState(() => {
-		if (valueHotel.discount === undefined) {
-			return 'Không có mã giảm';
-		}
-		if (valueHotel.discount?.discount_type === 'fixed') {
-			return 'Tiết kiệm ' + valueHotel.discount?.discount + ' đ';
-		}
-		return 'Tiết kiệm ' + valueHotel.discount?.discount + ' %';
-	});
-
-	const [open, setOpen] = React.useState(false);
+	const [open, setOpen] = useState(false);
 
 	const handleClickOpen = () => {
 		setOpen(true);
@@ -73,18 +39,14 @@ function PostProduct({ valueHotel }: PostProductProps) {
 		setOpen(false);
 	};
 
-	const handleGotoLogin = () => {
-		setOpen(false);
-		router.push({
-			pathname: '/login',
-		});
-	};
+	const image = valueHotel.img_url.img_url;
+	const locations = valueHotel.id_tourists.map((location) => {
+		return location.name;
+	});
 
-	const images = handleImage([valueHotel.img_url]);
-	const imageSrc = images[0];
-
+	console.log(profile);
 	const handleClickDetail = (slug: string, id_hotel: string) => {
-		if (!profile) {
+		if (profile === undefined) {
 			handleClickOpen();
 			return;
 		}
@@ -103,21 +65,28 @@ function PostProduct({ valueHotel }: PostProductProps) {
 		<Stack
 			component={Paper}
 			direction={'row'}
+			justifyContent={'space-between'}
 			padding={2}
 		>
-			<Image
-				src={imageSrc === '' ? '/a.jpg' : imageSrc}
-				alt={valueHotel.name}
-				height={200}
-				width={200}
-			/>
+			<Stack
+				direction={'row'}
+				justifyContent={'center'}
+				alignItems={'center'}
+			>
+				<Image
+					src={image}
+					alt={valueHotel.name}
+					height={250}
+					width={240}
+				/>
+			</Stack>
 			<Box marginLeft={2}>
 				<Typography
 					variant="h5"
 					fontWeight={500}
 					color={theme.palette.primary.main}
 				>
-					{valueHotel.name}
+					{valueHotel.name} {valueHotel.name_short ? '(' + valueHotel.name_short + ')' : ''}
 				</Typography>
 				<Typography>{valueHotel.type}</Typography>
 				<Rating
@@ -127,60 +96,89 @@ function PostProduct({ valueHotel }: PostProductProps) {
 					readOnly
 				/>
 
-				<Typography my={1}>{valueHotel.address}</Typography>
+				<Typography
+					my={1}
+					fontWeight={500}
+				>
+					{valueHotel.address.length <= 50
+						? valueHotel.address
+						: `${valueHotel.address.slice(0, 50)} ...`}
+				</Typography>
 				<Typography>{valueHotel.famous}</Typography>
 				<Typography
 					maxWidth={250}
 					variant="body2"
 				>
-					{valueHotel.description.length <= 50
-						? valueHotel.description
-						: `${valueHotel.description.slice(0, 50)} ...`}
+					{valueHotel.description &&
+						(valueHotel.description.length <= 50
+							? valueHotel.description
+							: `${valueHotel.description.slice(0, 50)} ...`)}
 				</Typography>
+				{valueHotel.id_tourists.length > 0 && (
+					<Typography
+						component={'span'}
+						variant="body2"
+						color={theme.palette.primary.main}
+					>
+						{locations.join(`, `).length <= 2 ? locations : `${locations.slice(0, 2)} ...`}
+					</Typography>
+				)}
+				{groupedRooms(valueHotel.rooms).map((room) => (
+					<Stack
+						direction={'row'}
+						key={room.roomType._id}
+						spacing={1}
+						alignItems={'start'}
+					>
+						<Typography>x{room.count}</Typography>
+
+						<Box>
+							<Typography fontWeight={600}>{room.roomType.name}</Typography>
+							<Stack
+								direction={'row'}
+								spacing={1}
+							>
+								<BedIcon color="disabled" />
+								<Typography
+									variant="body2"
+									fontWeight={100}
+								>
+									{room.roomType.beds} gường đôi
+								</Typography>
+							</Stack>
+							<Stack
+								direction={'row'}
+								spacing={1}
+							>
+								<PeopleIcon color="disabled" />
+								<Typography
+									variant="body2"
+									fontWeight={100}
+								>
+									{room.roomType.capacity} người
+								</Typography>
+							</Stack>
+						</Box>
+					</Stack>
+				))}
 			</Box>
 			<Divider
 				sx={{ mx: 2 }}
 				orientation="vertical"
 				flexItem
 			/>
-			<Box marginLeft={2}>
-				<Box textAlign={'end'}>
-					<Checkbox
-						{...label}
-						icon={<FavoriteBorder />}
-						checkedIcon={<Favorite />}
-					/>
-				</Box>
-
-				<Typography
-					color={'#04A755'}
-					fontWeight={500}
-					variant="body2"
-					my={1}
-					textAlign={'end'}
-				>
-					{discount}
-				</Typography>
-				<Typography
-					color={'#1BA0E8'}
-					variant="body2"
-					textAlign={'end'}
-				>
-					Thanh toán khi nhận phòng
-				</Typography>
-				<Typography
-					pt={1}
-					sx={{ textDecoration: 'line-through' }}
-					textAlign={'end'}
-					color={red[300]}
-					height={24}
-				>
-					{valueHotel.discount ? convertToVND(parseInt(valueHotel.price)) : ' '}
+			<Stack
+				justifyContent={'end'}
+				marginLeft={2}
+				textAlign={'end'}
+			>
+				<Typography variant="body2">
+					{number_room} đêm, {number_adult} người lớn{' '}
+					{number_children ? `, ${number_children} trẻ em` : ''}
 				</Typography>
 				<Typography
 					variant="h6"
 					fontWeight={700}
-					textAlign={'end'}
 					color={'inherit'}
 				>
 					{convertToVND(totalPrice)}
@@ -191,39 +189,13 @@ function PostProduct({ valueHotel }: PostProductProps) {
 					sx={{ marginY: 1 }}
 					onClick={() => handleClickDetail(valueHotel.slug, valueHotel._id)}
 				>
-					Xem phòng trống
+					Xem phòng đề xuất
 				</Button>
-			</Box>
-			<Dialog
+			</Stack>
+			<DialogAlertLogin
 				open={open}
-				onClose={handleClose}
-				aria-labelledby="alert-dialog-title"
-				aria-describedby="alert-dialog-description"
-			>
-				<DialogTitle id="alert-dialog-title">
-					{'Thông báo khi chưa đăng nhập tài khoản'}
-				</DialogTitle>
-				<DialogContent>
-					<DialogContentText id="alert-dialog-description">
-						Bạn cần phải đăng nhập mới có thể xem thông tin về khách sạn
-					</DialogContentText>
-				</DialogContent>
-				<DialogActions>
-					<Button
-						onClick={handleClose}
-						color="primary"
-					>
-						Đóng
-					</Button>
-					<Button
-						onClick={handleGotoLogin}
-						autoFocus
-						color="error"
-					>
-						Đi tới trang đăng nhập
-					</Button>
-				</DialogActions>
-			</Dialog>
+				handleClose={handleClose}
+			/>
 		</Stack>
 	);
 }

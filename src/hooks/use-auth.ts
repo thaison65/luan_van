@@ -10,28 +10,7 @@ import {
 	validatePhone,
 } from '~/utils/validation';
 
-export interface UserCustomer {
-	phone: string;
-	password: string;
-}
-
-export interface RegisterCustomer extends UserCustomer {
-	first_name: string;
-	last_name: string;
-	email: string;
-	gender: string;
-	birthday: Date;
-}
-
-export interface UpdateCustomer {
-	_id: string;
-	first_name?: string;
-	last_name?: string;
-	email?: string;
-	gender?: string;
-	birthday?: Date;
-	img_url?: File;
-}
+import { loginPayLoad, RegisterLoad, UpdateLoad, UpdatePwdUser } from '~/models';
 
 export function useAuth(option?: Partial<PublicConfiguration>) {
 	const {
@@ -46,7 +25,7 @@ export function useAuth(option?: Partial<PublicConfiguration>) {
 
 	const firstLoading = profile === undefined && error === undefined;
 
-	const login = async ({ phone, password }: UserCustomer) => {
+	const login = async ({ phone, password }: loginPayLoad) => {
 		validatePhone(phone);
 		validatePassword(password);
 
@@ -62,24 +41,27 @@ export function useAuth(option?: Partial<PublicConfiguration>) {
 		last_name,
 		gender,
 		birthday,
-	}: RegisterCustomer) => {
+	}: RegisterLoad) => {
 		validatePhone(phone);
 		validatePassword(password);
 		validateEmail(email);
 		validateFirstName(first_name);
 		validateLastName(last_name);
-		// validateBirthday(birthday);
 
-		await authApi.register({
-			phone: phone,
-			password: password,
-			email: email,
-			first_name: first_name,
-			last_name: last_name,
-			gender: gender,
-			birthday: birthday,
-		});
-		await mutate({}, false);
+		try {
+			await authApi.register({
+				phone: phone,
+				password: password,
+				email: email,
+				first_name: first_name,
+				last_name: last_name,
+				gender: gender,
+				birthday: birthday,
+			});
+			await mutate({}, false);
+		} catch (error) {
+			throw new Error(error as string | undefined);
+		}
 	};
 
 	const updateUser = async ({
@@ -90,7 +72,7 @@ export function useAuth(option?: Partial<PublicConfiguration>) {
 		gender,
 		birthday,
 		img_url,
-	}: UpdateCustomer) => {
+	}: UpdateLoad) => {
 		email && validateEmail(email);
 		first_name && validateFirstName(first_name);
 		last_name && validateLastName(last_name);
@@ -104,6 +86,20 @@ export function useAuth(option?: Partial<PublicConfiguration>) {
 			birthday: birthday,
 			img_url: img_url,
 		});
+		// Update local cache
+		await mutate('/customers/profile');
+	};
+
+	const updatePwd = async ({ _id, pwdOld, newPwd }: UpdatePwdUser) => {
+		pwdOld && validatePassword(pwdOld);
+		newPwd && validatePassword(newPwd);
+
+		await authApi.updatePwd({
+			_id: _id,
+			pwdOld: pwdOld,
+			newPwd: newPwd,
+		});
+		// Update local cache
 		await mutate({}, false);
 	};
 
@@ -118,6 +114,7 @@ export function useAuth(option?: Partial<PublicConfiguration>) {
 		login,
 		registerUser,
 		updateUser,
+		updatePwd,
 		logout,
 		firstLoading,
 	};

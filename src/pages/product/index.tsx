@@ -61,9 +61,15 @@ export default function ProductPage({}: ProductPageProps) {
 
 	return (
 		<Box>
-			<HeroSectionProduct />
 			<Stack>
-				<SectionProduct posts={posts} />
+				<HeroSectionProduct />
+
+				<SectionProduct
+					posts={posts}
+					number_adult={parseInt(query.number_adults)}
+					number_children={query.number_children && query.number_children.length}
+					number_room={parseInt(query.number_room)}
+				/>
 			</Stack>
 		</Box>
 	);

@@ -1,8 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Box, Stack, Typography, Container } from '@mui/material';
-
-import { BOOKING_LIST_STATUS } from './router';
+import { Box, Typography, Container } from '@mui/material';
 
 interface HeaderBookingProps {}
 
@@ -12,6 +10,7 @@ function HeaderBooking({}: HeaderBookingProps) {
 			component={Container}
 			display={'flex'}
 			alignItems={'center'}
+			paddingY={2}
 		>
 			<Box flexGrow={1}>
 				<Box
@@ -35,28 +34,6 @@ function HeaderBooking({}: HeaderBookingProps) {
 					</Link>
 				</Box>
 			</Box>
-			<Stack
-				padding={2}
-				direction={'row'}
-				spacing={8}
-				flexGrow={0}
-				justifyContent={'end'}
-				alignItems={'center'}
-			>
-				{BOOKING_LIST_STATUS.map((status, index) => {
-					return (
-						<Box key={status.value}>
-							<Typography
-								fontWeight={400}
-								color={'GrayText'}
-								variant="body1"
-							>
-								{index + 1} {status.title}
-							</Typography>
-						</Box>
-					);
-				})}
-			</Stack>
 		</Box>
 	);
 }

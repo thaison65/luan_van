@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import httProxy from 'http-proxy';
 import { serialize } from 'cookie';
 
 type Data = {
@@ -11,8 +10,6 @@ export const config = {
 		bodyParser: false,
 	},
 };
-
-const proxy = httProxy.createProxyServer();
 
 export default function handler(req: NextApiRequest, res: NextApiResponse<Data>) {
 	if (req.method !== 'POST') {

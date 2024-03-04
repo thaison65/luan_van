@@ -1,31 +1,32 @@
-import { useState, ChangeEvent, useEffect, FormEvent } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
+import { useRouter } from 'next/router';
 
 import {
 	Box,
 	Stack,
 	Paper,
 	Typography,
-	Avatar,
-	Divider,
-	Grid,
 	TextField,
 	Button,
+	Alert,
+	Dialog,
+	DialogTitle,
 } from '@mui/material';
-import { styled } from '@mui/material/styles';
-
-const Item = styled(Paper)(({ theme }) => ({
-	backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-	...theme.typography.body2,
-	textAlign: 'center',
-	color: theme.palette.text.secondary,
-}));
+import { InvalidPasswordException } from '~/utils';
+import { useAuth } from '~/hooks';
 
 interface PasswordDesktopProps {}
 
 function PasswordDesktop({}: PasswordDesktopProps) {
+	const { profile, updatePwd, logout } = useAuth();
+	const router = useRouter();
+
 	const [pwdOld, setPwdOld] = useState<string>('');
 	const [newPwd, setNewPwd] = useState<string>('');
 	const [pwd, setPwd] = useState<string>('');
+
+	const [pwdError, setPwdError] = useState<boolean>(false);
+	const [open, setOpen] = useState(false);
 
 	const handleChangePwdOld = (event: ChangeEvent<HTMLInputElement>) => {
 		setPwdOld(event.target.value as string);
@@ -38,11 +39,48 @@ function PasswordDesktop({}: PasswordDesktopProps) {
 		setPwd(event.target.value as string);
 	};
 
-	const handleSubmitFormUpdate = (event: FormEvent<HTMLFormElement>) => {
+	const hanldeCheckPwd = () => {
+		if (newPwd !== pwd) {
+			setPwdError(true);
+			return;
+		}
+		setPwdError(false);
+	};
+
+	const handleClose = () => {
+		setOpen(false);
+	};
+
+	const handleSubmitFormUpdate = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
+
+		const _id = profile?.data?._id;
+
+		try {
+			if (!!pwdOld && !!newPwd) {
+				if (newPwd !== pwd) {
+					throw new Error('Mật khẩu và xác nhận không trùng khớp!');
+				}
+				await updatePwd({ _id, pwdOld, newPwd });
+				await logout();
+				router.push('/');
+			}
+			setOpen(true);
+		} catch (error: unknown) {
+			if (error instanceof InvalidPasswordException) {
+				console.log(error.message);
+				return;
+			}
+			setOpen(true);
+		}
 	};
 	return (
-		<Box display={{ xs: 'none', lg: 'flex' }}>
+		<Box
+			display={{ xs: 'none', lg: 'flex' }}
+			component={'form'}
+			encType=""
+			onSubmit={handleSubmitFormUpdate}
+		>
 			<Box
 				component={Paper}
 				elevation={0}
@@ -58,81 +96,93 @@ function PasswordDesktop({}: PasswordDesktopProps) {
 				</Typography>
 
 				<Box
-					component={'form'}
-					encType=""
-					onSubmit={handleSubmitFormUpdate}
+					component={Paper}
+					mt={1}
+					p={2}
 				>
-					<Box
-						component={Paper}
-						mt={1}
-						p={2}
-					>
-						<Box mt={3}>
-							<TextField
-								fullWidth
-								label={'Mật khẩu hiện tại'}
-								id="txt_pwdOld"
-								name="pwdOld"
-								type="pwdOld"
-								onChange={handleChangePwdOld}
-							/>
-							<Typography
-								fontWeight={500}
-								color={'GrayText'}
-								variant="body2"
-							>
-								<span style={{ color: 'red' }}>*</span> Nhập lại mật khẩu hiện tại
-							</Typography>
-						</Box>
-						<Box mt={3}>
-							<TextField
-								fullWidth
-								label={'Mật khẩu mới'}
-								id="txt_newPwd"
-								name="newPwd"
-								type="newPwd"
-								onChange={handleChangeNewPwd}
-							/>
-							<Typography
-								fontWeight={500}
-								color={'GrayText'}
-								variant="body2"
-							>
-								<span style={{ color: 'red' }}>*</span> Nhập mật khẩu mới muốn thay đổi
-							</Typography>
-						</Box>
-						<Box mt={3}>
-							<TextField
-								fullWidth
-								label={'Nhập lại mật khẩu mới'}
-								id="txt_pwd"
-								name="pwd"
-								type="pwd"
-								onChange={handleChangePwd}
-							/>
-							<Typography
-								fontWeight={500}
-								color={'GrayText'}
-								variant="body2"
-							>
-								<span style={{ color: 'red' }}>*</span> Nhập lại mật khẩu mới
-							</Typography>
-						</Box>
-					</Box>
-					<Stack
-						alignItems={'end'}
-						marginTop={2}
-					>
-						<Button
-							type="submit"
-							variant="contained"
-							color="warning"
+					<Box mt={3}>
+						<TextField
+							fullWidth
+							label={'Mật khẩu hiện tại'}
+							id="txt_pwdOld"
+							name="pwdOld"
+							type="password"
+							onChange={handleChangePwdOld}
+							required
+						/>
+						<Typography
+							fontWeight={500}
+							color={'GrayText'}
+							variant="body2"
 						>
-							Cập nhập
-						</Button>
-					</Stack>
+							<span style={{ color: 'red' }}>*</span> Nhập lại mật khẩu hiện tại
+						</Typography>
+					</Box>
+					<Box mt={3}>
+						<TextField
+							fullWidth
+							label={'Mật khẩu mới'}
+							id="txt_newPwd"
+							name="newPwd"
+							type="password"
+							onChange={handleChangeNewPwd}
+							required
+						/>
+						<Typography
+							fontWeight={500}
+							color={'GrayText'}
+							variant="body2"
+						>
+							<span style={{ color: 'red' }}>*</span> Nhập mật khẩu mới muốn thay đổi
+						</Typography>
+					</Box>
+					<Box mt={3}>
+						<TextField
+							fullWidth
+							label={'Nhập lại mật khẩu mới'}
+							id="txt_pwd"
+							name="pwd"
+							type="password"
+							onChange={handleChangePwd}
+							onBlur={hanldeCheckPwd}
+							required
+						/>
+						<Typography
+							fontWeight={500}
+							color={'GrayText'}
+							variant="body2"
+						>
+							<span style={{ color: 'red' }}>*</span> Nhập lại mật khẩu mới
+						</Typography>
+						<Alert
+							severity="error"
+							sx={{ display: pwdError ? 'flex' : 'none' }}
+						>
+							Nhập lại mật khẩu — <strong>chưa trùng khớp!</strong>
+						</Alert>
+					</Box>
 				</Box>
+				<Stack
+					alignItems={'end'}
+					marginTop={2}
+				>
+					<Button
+						type="submit"
+						variant="contained"
+						color="warning"
+					>
+						Cập nhập
+					</Button>
+				</Stack>
 			</Box>
+			<Dialog
+				onClose={handleClose}
+				open={open}
+			>
+				<Alert severity="error">
+					Kiểm tra lại - <strong>thông tin!</strong>
+				</Alert>
+			</Dialog>
 		</Box>
 	);
 }

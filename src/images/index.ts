@@ -10,3 +10,5 @@ export * from './pexels-foc-foodoncam-58597.jpg';
 
 //images
 export * from './photo-1440778303588-435521a205bc.webp';
+export * from './Mui Ne beach_1085095151.jpg';
+export * from './lang chai xua_284363051.jpg';

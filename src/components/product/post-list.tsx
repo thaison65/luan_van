@@ -6,9 +6,14 @@ import { HotelListResult } from '~/models/hotel';
 
 export interface PostListProductProps {
 	postList: HotelListResult[];
+	number_adult: number;
+	number_children: number;
+	number_room: number;
 }
 
-function PostListProduct({ postList }: PostListProductProps) {
+function PostListProduct(props: PostListProductProps) {
+	const { postList, number_adult, number_children, number_room } = props;
+
 	if (postList.length === 0) return null;
 
 	return (
@@ -19,7 +24,12 @@ function PostListProduct({ postList }: PostListProductProps) {
 			{postList.map((post) => {
 				return (
 					<Box key={post._id}>
-						<PostProduct valueHotel={post} />
+						<PostProduct
+							valueHotel={post}
+							number_adult={number_adult}
+							number_children={number_children}
+							number_room={number_room}
+						/>
 						<Divider />
 					</Box>
 				);

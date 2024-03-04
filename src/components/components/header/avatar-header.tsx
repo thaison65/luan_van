@@ -6,17 +6,16 @@ import { Button, Avatar, Typography, Menu, MenuItem, Box } from '@mui/material';
 
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import WorkOutlineIcon from '@mui/icons-material/WorkOutline';
-import DiscountIcon from '@mui/icons-material/Discount';
-import RateReviewIcon from '@mui/icons-material/RateReview';
 import LogoutIcon from '@mui/icons-material/Logout';
 
 import { useAuth } from '~/hooks';
 
 export interface AvatarHeaderProps {
 	profile?: any;
+	handleRenderLogout: () => void;
 }
 
-function AvatarHeader({ profile }: AvatarHeaderProps) {
+function AvatarHeader({ profile, handleRenderLogout }: AvatarHeaderProps) {
 	const { logout } = useAuth();
 	const router = useRouter();
 
@@ -39,19 +38,11 @@ function AvatarHeader({ profile }: AvatarHeaderProps) {
 		handleCloseAvatar();
 	};
 
-	const handleDiscount = () => {
-		handleCloseAvatar();
-	};
-
-	const handleReview = () => {
-		handleCloseAvatar();
-	};
-
-	async function handleClickLogout() {
-		window.location.reload();
+	const handleClickLogout = async () => {
 		await logout();
+		handleRenderLogout();
 		handleCloseAvatar();
-	}
+	};
 
 	return (
 		<Box>
@@ -104,36 +95,17 @@ function AvatarHeader({ profile }: AvatarHeaderProps) {
 					sx={{ p: 1 }}
 				>
 					<WorkOutlineIcon sx={{ color: '#7f7f7f', mx: 1 }} />
-					<Typography
-						color={'#7f7f7f'}
-						variant="body2"
+					<Link
+						href={'/profile/history'}
+						style={{ textDecoration: 'none' }}
 					>
-						Lịch sử đặt chỗ
-					</Typography>
-				</MenuItem>
-				<MenuItem
-					onClick={handleDiscount}
-					sx={{ p: 1 }}
-				>
-					<DiscountIcon sx={{ color: '#7f7f7f', mx: 1 }} />
-					<Typography
-						color={'#7f7f7f'}
-						variant="body2"
-					>
-						Chương trình khách hàng thân thiết
-					</Typography>
-				</MenuItem>
-				<MenuItem
-					onClick={handleReview}
-					sx={{ p: 1 }}
-				>
-					<RateReviewIcon sx={{ color: '#7f7f7f', mx: 1 }} />
-					<Typography
-						color={'#7f7f7f'}
-						variant="body2"
-					>
-						Đánh giá
-					</Typography>
+						<Typography
+							color={'#7f7f7f'}
+							variant="body2"
+						>
+							Lịch sử đặt chỗ
+						</Typography>
+					</Link>
 				</MenuItem>
 				<MenuItem
 					onClick={handleClickLogout}

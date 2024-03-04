@@ -1,9 +1,7 @@
-import React from 'react';
-import { Box, Typography, Rating, Divider, Stack, Paper, Button } from '@mui/material';
-
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import Image from 'next/image';
+import { Box, Typography, Rating, Divider, Stack, Paper } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import { HotelManagerResult } from '~/models/hotel';
+import { HotelManagerResult, TouristReuslt } from '~/models/hotel';
 
 interface GeneralProductDetailProps {
 	name: string;
@@ -11,15 +9,25 @@ interface GeneralProductDetailProps {
 	number_star: string;
 	description: string;
 	id_hotel_management: HotelManagerResult;
+	numberAdults?: string;
+	numberChildren?: string[];
+	regulations: string;
+	tourists: TouristReuslt[];
 }
 
-function GeneralProductDetail({
-	name,
-	address,
-	number_star,
-	description,
-	id_hotel_management,
-}: GeneralProductDetailProps) {
+const GeneralProductDetail = (props: GeneralProductDetailProps) => {
+	const {
+		name,
+		address,
+		number_star,
+		description,
+		id_hotel_management,
+		numberAdults,
+		numberChildren,
+		regulations,
+		tourists,
+	} = props;
+
 	return (
 		<Box id="#tongquan">
 			<Stack
@@ -54,19 +62,41 @@ function GeneralProductDetail({
 					</Box>
 					<Divider />
 					<Typography variant="body2">{description}</Typography>
-
-					<Box marginTop={1}>
-						<Typography variant="h6">Các tiện nghi được ưu thích</Typography>
-					</Box>
 				</Box>
 				<Box minWidth={'40%'}>
 					<Box
 						component={Paper}
 						padding={2}
 					>
-						<Typography fontWeight={400}>
-							{id_hotel_management.first_name + ' ' + id_hotel_management.last_name}
-						</Typography>
+						<Stack direction={'row'}>
+							<Typography
+								fontWeight={400}
+								display={'flex'}
+							>
+								Tên chủ khách sạn:{' '}
+							</Typography>
+							<Typography
+								fontWeight={600}
+								marginX={1}
+							>
+								{id_hotel_management.first_name + ' ' + id_hotel_management.last_name}
+							</Typography>
+						</Stack>
+
+						<Stack direction={'row'}>
+							<Typography
+								fontWeight={400}
+								display={'flex'}
+							>
+								Đặt phòng cho:{' '}
+							</Typography>
+							<Typography
+								fontWeight={600}
+								marginX={1}
+							>
+								{numberAdults + ' người lớn và ' + numberChildren?.length + ' trẻ em'}
+							</Typography>
+						</Stack>
 					</Box>
 					<Box
 						component={Paper}
@@ -74,36 +104,53 @@ function GeneralProductDetail({
 						marginTop={1}
 					>
 						<Typography fontWeight={500}>Điểm nổi bật của chỗ nghỉ</Typography>
+						<Stack
+							direction={'row'}
+							spacing={1}
+						>
+							<Typography color={'GrayText'}>Chính sách: </Typography>
 
-						<Stack spacing={2}>
-							<Box
-								display={'flex'}
-								justifyContent={'center'}
-							>
-								<Button
-									variant="contained"
-									sx={{ mt: 2, textAlign: 'center' }}
-								>
-									Đặt cho 3 người lớn, 1 trẻ em
-								</Button>
-							</Box>
-							<Box
-								display={'flex'}
-								justifyContent={'center'}
-							>
-								<Button
-									variant="outlined"
-									startIcon={<FavoriteBorderIcon />}
-								>
-									Lưu vào mục yêu thích
-								</Button>
-							</Box>
+							<Typography fontWeight={600}>{regulations}</Typography>
 						</Stack>
 					</Box>
 				</Box>
 			</Stack>
+
+			<Box marginY={2}>
+				<Typography
+					fontWeight={600}
+					variant="h6"
+				>
+					Các địa điểm gần kề
+				</Typography>
+				<Box
+					component={Paper}
+					padding={2}
+				>
+					<Stack
+						direction={'row'}
+						spacing={1}
+					>
+						{tourists.map((tourist) => {
+							return (
+								<Box key={tourist._id}>
+									<Stack spacing={1}>
+										<Typography fontWeight={600}>{tourist.name}</Typography>
+										<Image
+											src={tourist.img_url}
+											alt={tourist.name}
+											width={200}
+											height={150}
+										/>
+									</Stack>
+								</Box>
+							);
+						})}
+					</Stack>
+				</Box>
+			</Box>
 		</Box>
 	);
-}
+};
 
 export default GeneralProductDetail;

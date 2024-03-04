@@ -1,24 +1,17 @@
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Box, Divider, Paper, Typography, Stack, Button } from '@mui/material';
 import { red } from '@mui/material/colors';
 
 import BedIcon from '@mui/icons-material/Bed';
 import PeopleIcon from '@mui/icons-material/People';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import WifiIcon from '@mui/icons-material/Wifi';
-import VapingRoomsIcon from '@mui/icons-material/VapingRooms';
-import RequestPageIcon from '@mui/icons-material/RequestPage';
-import RoomServiceIcon from '@mui/icons-material/RoomService';
-import LocalOfferIcon from '@mui/icons-material/LocalOffer';
 
-import { DiscountReuilt, QuerySearchResult, RoomResult } from '~/models';
+import { QuerySearchResult, RoomResult, RoomTypeState } from '~/models';
 import { useRouter } from 'next/router';
-import { convertToVND, handleImage } from '~/utils/index';
-import { theme } from '~/utils';
+import { convertToVND, theme } from '~/utils/index';
 
 interface SelectRoomProps {
 	rooms: RoomResult[];
-	discount: DiscountReuilt;
 	daily: number;
 	nameHotel: string;
 }
@@ -27,15 +20,10 @@ interface RoomType {
 	[id: string]: RoomResult[];
 }
 
-function SelectRoom({ rooms, discount, daily, nameHotel }: SelectRoomProps) {
+function SelectRoom(props: SelectRoomProps) {
+	const { daily, nameHotel, rooms } = props;
+
 	const router = useRouter();
-
-	const [querySearch, setQuerySearch] = useState<QuerySearchResult>();
-
-	useEffect(() => {
-		const querySearch = JSON.parse(localStorage.getItem('querySearch') as string);
-		setQuerySearch(querySearch);
-	}, []);
 
 	const groupedRooms: RoomType = rooms.reduce((result, room) => {
 		const roomTypeId = room.id_roomType.name;
@@ -51,22 +39,105 @@ function SelectRoom({ rooms, discount, daily, nameHotel }: SelectRoomProps) {
 		rooms: value,
 	}));
 
-	const handleClickBooking = async (name: string) => {
-		const number_room = querySearch?.number_room;
-		let dataRooms: RoomResult[] = [];
-		groupedRoomsArray.map((group) => {
-			if (group.name === name) {
-				dataRooms = group.rooms.slice(0, number_room);
-				return;
+	const [querySearch, setQuerySearch] = useState<QuerySearchResult>();
+	const [numberType, setNumberType] = useState<number>(0);
+	const [roomsType, setRoomsType] = useState<RoomTypeState[]>([]);
+	const [price, setPrice] = useState<number>(0);
+
+	useEffect(() => {
+		const querySearch = JSON.parse(localStorage.getItem('querySearch') as string);
+		setQuerySearch(querySearch);
+	}, []);
+
+	const handleClickBooking = async () => {
+		if (roomsType.length === 0) {
+			alert('Bạn chưa chọn phòng');
+			return;
+		}
+
+		const roomBookings: RoomResult[] = [];
+		roomsType.forEach((type) => {
+			let number = type.number;
+
+			if (number === 0) return;
+
+			for (const room of rooms) {
+				if (room.id_roomType._id === type.id) {
+					roomBookings.push(room);
+					number -= 1;
+
+					if (number === 0) break;
+				}
 			}
 		});
 
-		localStorage.setItem('roomBookings', JSON.stringify(dataRooms));
-		localStorage.setItem('discount', JSON.stringify(discount));
+		localStorage.setItem('roomBookings', JSON.stringify(roomBookings));
 		localStorage.setItem('nameHotel', JSON.stringify(nameHotel));
 		localStorage.setItem('daily', JSON.stringify(daily));
+		localStorage.setItem('imgRoom', JSON.stringify(roomBookings[0].img));
+		localStorage.setItem('priceRoom', JSON.stringify(price * daily));
 
-		router.push({ pathname: `/product/booking`, query: {} });
+		router.push({ pathname: `/product/booking/booking`, query: {} });
+	};
+
+	const handlePlus = (id: string, numberRoom: number, priceRoom: number) => {
+		const number_room = querySearch?.number_room;
+
+		if (number_room === numberType) {
+			alert('Đã quá số lượng phòng ban đầu');
+			return;
+		}
+
+		const roomTypeExists = roomsType.find((room) => room.id === id);
+
+		if (!roomTypeExists) {
+			setNumberType((prevNumber) => prevNumber + 1);
+			setPrice((prevPrice) => prevPrice + priceRoom);
+			setRoomsType([...roomsType, { id, number: 1 }]);
+		} else {
+			const updatedRoomTypeIndex = roomsType.findIndex((type) => type.id === id);
+			if (updatedRoomTypeIndex !== -1) {
+				if (numberRoom < roomsType[updatedRoomTypeIndex].number + 1) {
+					alert('Phòng này đã hết, xin chọn phòng khác');
+					return;
+				}
+				roomsType[updatedRoomTypeIndex].number += 1;
+				setRoomsType([...roomsType]);
+				setNumberType((prevNumber) => prevNumber + 1);
+				setPrice((prevPrice) => prevPrice + priceRoom);
+			}
+		}
+	};
+
+	const handleSub = (id: string, priceRoom: number) => {
+		if (numberType === 0) {
+			alert('Không còn cùng loại phòng để bạn trừ');
+			return;
+		}
+
+		const roomTypeExists = roomsType.find((room) => room.id === id);
+
+		if (!!roomTypeExists) {
+			const updatedRoomTypeIndex = roomsType.findIndex((type) => type.id === id);
+
+			if (updatedRoomTypeIndex !== -1) {
+				if (roomsType[updatedRoomTypeIndex].number === 1) {
+					// Delete the item if its number is already 1
+					setRoomsType([
+						...roomsType.slice(0, updatedRoomTypeIndex),
+						...roomsType.slice(updatedRoomTypeIndex + 1),
+					]);
+					setNumberType((prevNumber) => prevNumber - 1);
+					setPrice((prevPrice) => prevPrice - priceRoom);
+				} else {
+					// Decrement the number if it's greater than 1
+					roomsType[updatedRoomTypeIndex].number -= 1;
+					setRoomsType([...roomsType]);
+					setNumberType((prevNumber) => prevNumber - 1);
+					setPrice((prevPrice) => prevPrice - priceRoom);
+				}
+			}
+		}
 	};
 
 	return (
@@ -74,12 +145,81 @@ function SelectRoom({ rooms, discount, daily, nameHotel }: SelectRoomProps) {
 			marginTop={4}
 			id="#phongnghi"
 		>
-			<Typography
-				variant="h5"
-				fontWeight={500}
+			<Stack
+				direction={'row'}
+				justifyContent={'space-between'}
 			>
-				Phòng trống
-			</Typography>
+				<Box>
+					<Typography
+						variant="h5"
+						fontWeight={500}
+					>
+						Các lựa chọn khác
+					</Typography>
+
+					{numberType > 0 && (
+						<Stack
+							direction={'row'}
+							spacing={1}
+							marginTop={2}
+						>
+							<Typography
+								color={'GrayText'}
+								variant="h6"
+							>
+								Lựa chọn ban đầu:{' '}
+							</Typography>
+							{querySearch && (
+								<Typography
+									variant="h6"
+									color={theme.palette.primary.main}
+								>
+									{querySearch.number_adults} người lớn, {querySearch.number_children?.length} trẻ
+									em, {querySearch.number_room} phòng
+								</Typography>
+							)}
+						</Stack>
+					)}
+				</Box>
+
+				{numberType > 0 && (
+					<Stack
+						direction={'row'}
+						alignItems={'end'}
+					>
+						<Stack
+							justifyContent={'end'}
+							spacing={1}
+							margin={1}
+						>
+							<Typography variant="h6">Tổng tiền phòng mà bạn đã lựa chọn</Typography>
+							<Stack
+								direction={'row'}
+								spacing={1}
+								justifyContent={'space-between'}
+							>
+								<Typography
+									fontWeight={600}
+									color={theme.palette.primary.main}
+									variant="h6"
+								>
+									{convertToVND(price * daily)}
+								</Typography>
+								<Typography variant="h6">Cho {daily} đêm</Typography>
+							</Stack>
+						</Stack>
+						<Button
+							variant="contained"
+							color="warning"
+							sx={{ mt: 2 }}
+							onClick={() => handleClickBooking()}
+						>
+							Đặt phòng
+						</Button>
+					</Stack>
+				)}
+			</Stack>
+
 			<Divider sx={{ my: 2 }} />
 
 			{groupedRoomsArray.map((group) => {
@@ -117,19 +257,27 @@ function SelectRoom({ rooms, discount, daily, nameHotel }: SelectRoomProps) {
 							direction={'row'}
 							spacing={2}
 						>
-							<Box
+							<Stack
+								direction={'row'}
 								component={Paper}
-								width={250}
-								height={200}
+								alignItems={'center'}
+								justifyContent={'center'}
+								width={210}
+								height={270}
 							>
-								<Typography>hình ảnh</Typography>
-							</Box>
+								<Image
+									src={group.rooms[0].img.img_url}
+									alt={group.rooms[0].img._id}
+									width={200}
+									height={250}
+									loading="lazy"
+								/>
+							</Stack>
 
 							<Box
 								width={'75%'}
 								maxHeight={600}
 								paddingRight={2}
-								sx={{ overflowY: rooms.length > 2 ? 'scroll' : undefined }}
 							>
 								<Box
 									key={group.rooms[0]._id}
@@ -153,7 +301,7 @@ function SelectRoom({ rooms, discount, daily, nameHotel }: SelectRoomProps) {
 												mx={1}
 												fontWeight={400}
 											>
-												{group.rooms[0].beds} giường đôi
+												{group.rooms[0].id_roomType.beds} giường đôi
 											</Typography>
 										</Box>
 										<Box display={'flex'}>
@@ -162,7 +310,7 @@ function SelectRoom({ rooms, discount, daily, nameHotel }: SelectRoomProps) {
 												mx={1}
 												fontWeight={400}
 											>
-												{group.rooms[0].capacity} khách
+												{group.rooms[0].id_roomType.capacity} khách
 											</Typography>
 										</Box>
 									</Stack>
@@ -171,136 +319,71 @@ function SelectRoom({ rooms, discount, daily, nameHotel }: SelectRoomProps) {
 
 									<Stack
 										direction={'row'}
-										spacing={1}
+										justifyContent={'end'}
 									>
 										<Box>
+											{roomsType.map((room) => {
+												if (room.id === group.rooms[0].id_roomType._id) {
+													return (
+														<Stack
+															key={room.id}
+															direction={'row'}
+															justifyContent={'end'}
+															spacing={1}
+															marginY={1}
+														>
+															<Typography>Số lượng phòng bạn đang chọn: </Typography>
+															<Typography
+																color={theme.palette.primary.main}
+																fontWeight={600}
+															>
+																{room.number}
+															</Typography>
+														</Stack>
+													);
+												}
+												return;
+											})}
 											<Stack
 												direction={'row'}
 												spacing={1}
-												flexGrow={1}
+												justifyContent={'end'}
 											>
-												<Stack spacing={1}>
-													<Box display={'flex'}>
-														<RestaurantIcon color="success" />
-														<Typography
-															mx={1}
-															fontWeight={400}
-															color={'green'}
-														>
-															Bao gồm bữa sáng
-														</Typography>
-													</Box>
-													<Box display={'flex'}>
-														<WifiIcon color="success" />
-														<Typography
-															mx={1}
-															fontWeight={400}
-															color={'green'}
-														>
-															Wifi miễn phí
-														</Typography>
-													</Box>
-												</Stack>
-												<Stack spacing={1}>
-													<Box display={'flex'}>
-														<RequestPageIcon color="action" />
-														<Typography
-															mx={1}
-															fontWeight={400}
-															color={'gray'}
-														>
-															Hủy phòng có thu phí
-														</Typography>
-													</Box>
-													<Box display={'flex'}>
-														<VapingRoomsIcon color="action" />
-														<Typography
-															mx={1}
-															fontWeight={400}
-															color={'gray'}
-														>
-															Không hút thuốc
-														</Typography>
-													</Box>
-												</Stack>
-											</Stack>
-											<Box
-												display={'flex'}
-												width={'80%'}
-												alignItems={'center'}
-											>
-												<RoomServiceIcon
-													color="primary"
-													fontSize="large"
-												/>
-												<Typography
-													color={theme.palette.primary.main}
-													marginLeft={1}
+												<Button
+													variant="contained"
+													onClick={() =>
+														handleSub(
+															group.rooms[0].id_roomType._id,
+															parseInt(group.rooms[0].price)
+														)
+													}
 												>
-													Thanh toán khi nhận phòng Đặt bây giờ và thanh toán khi nhận phòng!
-												</Typography>
-											</Box>
-										</Box>
-										<Box
-											flexGrow={0}
-											justifyContent={'end'}
-										>
-											<Typography
-												textAlign={'end'}
-												variant="body2"
-												height={24}
-												fontWeight={500}
-												color={'GrayText'}
-												sx={{ textDecoration: 'line-through' }}
-											>
-												{discount ? convertToVND(parseInt(group.rooms[0].price) * daily) : ''}
-											</Typography>
+													-
+												</Button>
+												<Button
+													variant="contained"
+													color="error"
+													onClick={() =>
+														handlePlus(
+															group.rooms[0].id_roomType._id,
+															group.rooms.length,
+															parseInt(group.rooms[0].price)
+														)
+													}
+												>
+													+
+												</Button>
+											</Stack>
 											<Typography
 												textAlign={'end'}
 												variant="h6"
 												fontWeight={700}
 												color={'orangered'}
 											>
-												{discount
-													? convertToVND(
-															discount.discount_type === 'percentage'
-																? parseInt(group.rooms[0].price) * daily -
-																		Math.min(
-																			(discount.discount * parseInt(group.rooms[0].price) * daily) /
-																				100,
-																			discount.price_max
-																		)
-																: discount.discount_type === 'fixed'
-																? parseInt(group.rooms[0].price) * daily - discount.price_max
-																: parseInt(group.rooms[0].price)
-													  )
-													: convertToVND(parseInt(group.rooms[0].price) * daily)}
+												{convertToVND(parseInt(group.rooms[0].price))}
 											</Typography>
-											<Button
-												variant="contained"
-												color="warning"
-												sx={{ mt: 2 }}
-												onClick={() => handleClickBooking(group.name)}
-											>
-												Chọn phòng
-											</Button>
 										</Box>
 									</Stack>
-									<Divider sx={{ my: 2 }} />
-									<Box display={'flex'}>
-										<LocalOfferIcon color="success" />
-										<Typography
-											mx={1}
-											color={'green'}
-											fontWeight={600}
-										>
-											{discount
-												? discount.discount_type === 'percentage'
-													? `Tiết kiệm ${discount.discount} %`
-													: `Tiết kiệm ${discount.discount} đ`
-												: 'Không có giảm giá'}
-										</Typography>
-									</Box>
 								</Box>
 							</Box>
 						</Stack>

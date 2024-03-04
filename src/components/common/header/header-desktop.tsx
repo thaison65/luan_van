@@ -1,18 +1,7 @@
-import React, { useState, MouseEvent } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 
-import {
-	Badge,
-	Box,
-	Button,
-	IconButton,
-	Stack,
-	Typography,
-	Menu,
-	MenuItem,
-	Avatar,
-	Paper,
-} from '@mui/material';
+import { Box, Button, Stack, Typography, Paper } from '@mui/material';
 
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 
@@ -38,6 +27,15 @@ export interface HeaderDesktopProps {}
 function HeaderDesktop({}: HeaderDesktopProps) {
 	const router = useRouter();
 	const { profile } = useAuth();
+
+	// Sử dụng một state khác để chứa giá trị thay đổi để trigger re-render
+	const [triggerRender, setTriggerRender] = useState<boolean>(false);
+
+	const handleRenderLogout = () => {
+		// Đặt triggerRender thành true để kích thích useEffect và re-render
+		setTriggerRender(true);
+		router.push('/');
+	};
 
 	const handleClickFavorite = () => {
 		router.push('/favorite');
@@ -73,7 +71,8 @@ function HeaderDesktop({}: HeaderDesktopProps) {
 					size="small"
 				>
 					<Link
-						href={'/'}
+						href={'http://localhost:5173/'}
+						target={'_blank'}
 						prefetch={false}
 						style={{ textDecoration: 'none' }}
 					>
@@ -81,30 +80,35 @@ function HeaderDesktop({}: HeaderDesktopProps) {
 					</Link>
 				</Button>
 
-				{!profile ? (
-					<HeaderProfile />
-				) : (
-					<Stack
-						direction={'row'}
-						spacing={1}
-					>
-						<Button
-							onClick={handleClickFavorite}
-							color="error"
-							variant="text"
-							size="small"
-							startIcon={<FavoriteBorderIcon />}
+				<Box>
+					{!!profile && !triggerRender ? (
+						<Stack
+							direction={'row'}
+							spacing={1}
 						>
-							Yêu thích
-						</Button>
+							{/* <Button
+								onClick={handleClickFavorite}
+								color="error"
+								variant="text"
+								size="small"
+								startIcon={<FavoriteBorderIcon />}
+							>
+								Yêu thích
+							</Button>
 
-						<Notification notifications={notifications} />
+							<Notification notifications={notifications} />
 
-						<Chat number={4} />
+							<Chat number={4} /> */}
 
-						<HeaderAvatar profile={profile.data} />
-					</Stack>
-				)}
+							<HeaderAvatar
+								profile={profile.data}
+								handleRenderLogout={handleRenderLogout}
+							/>
+						</Stack>
+					) : (
+						<HeaderProfile />
+					)}
+				</Box>
 			</Stack>
 		</Box>
 	);

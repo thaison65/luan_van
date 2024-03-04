@@ -14,16 +14,6 @@ export const ROUTE_LIST_IN_PROFILE = [
 		path: '/profile/password',
 		Icon: KeyIcon,
 	},
-	{
-		lable: 'Lịch sử đặt chỗ',
-		path: '/profile/history',
-		Icon: BallotIcon,
-	},
-	{
-		lable: 'Danh sách giao dịch',
-		path: '/profile/list-transaction',
-		Icon: ReceiptLongIcon,
-	},
 ];
 
 const Router = () => {};

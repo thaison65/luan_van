@@ -48,25 +48,7 @@ function HeroSectionProduct({}: HeroSectionProductProps) {
 				<Stack
 					direction={'row'}
 					spacing={2}
-				>
-					<SearchPlace onData={handleDataIDSearch} />
-					<Box component={Paper}>
-						<InputDate onDateIn={handleDataInDate} />
-					</Box>
-					<Box component={Paper}>
-						<InputDate onDateIn={handleDataOutDate} />
-					</Box>
-					<Box component={Paper}>
-						<FormQuality onData={handleDataPeople} />
-					</Box>
-					<Button
-						variant="contained"
-						sx={{ color: 'primary.main', bgcolor: '#ffffff', paddingX: 4 }}
-						type="submit"
-					>
-						Tìm
-					</Button>
-				</Stack>
+				></Stack>
 			</Container>
 		</Box>
 	);

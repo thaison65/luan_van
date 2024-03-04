@@ -21,18 +21,7 @@ import ChildFriendlyIcon from '@mui/icons-material/ChildFriendly';
 import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 
 import { FormQualityResult } from '~/models/search';
-
-const valueAges: JSX.Element[] = [];
-for (let i = 1; i <= 17; i++) {
-	valueAges.push(
-		<MenuItem
-			key={i}
-			value={i}
-		>
-			{i} tuổi
-		</MenuItem>
-	);
-}
+import { valueAges } from '~/hooks/value-ages';
 
 interface FormQualityProps {
 	title?: boolean;
@@ -215,6 +204,18 @@ function FormQuality({ title = false, onData }: FormQualityProps) {
 						</ButtonGroup>
 					</Stack>
 				</ListItemText>
+				<Stack
+					direction={'row'}
+					px={2}
+					justifyContent={'flex-end'}
+				>
+					<Typography
+						color={'GrayText'}
+						fontWeight={100}
+					>
+						Trẻ em trên 12 tuổi được tính là người lớn!
+					</Typography>
+				</Stack>
 				<ListItemText>
 					<Grid
 						container

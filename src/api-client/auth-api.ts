@@ -1,4 +1,4 @@
-import { loginPayLoad, RegisterLoad, UpdateLoad } from '~/models';
+import { loginPayLoad, RegisterLoad, UpdateLoad, UpdatePwdUser } from '~/models';
 import axiosClient from './axois-client';
 
 export const authApi = {
@@ -17,6 +17,11 @@ export const authApi = {
 				'Content-type': 'multipart/form-data',
 			},
 		});
+	},
+
+	updatePwd(payload: UpdatePwdUser) {
+		const id = payload._id;
+		return axiosClient.put(`customers/update/${id}/pwd`, payload);
 	},
 
 	logout() {

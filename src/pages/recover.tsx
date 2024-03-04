@@ -1,13 +1,10 @@
 import React, { useState, ChangeEvent, MouseEvent, useRef } from 'react';
 import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { yupResolver } from '@hookform/resolvers/yup';
 
 import { Box, Button, Paper, Stack, TextField, Typography } from '@mui/material';
 
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
-import { useAuth } from '~/hooks';
 import { useRouter } from 'next/router';
 import { theme } from '~/utils';
 
@@ -21,8 +18,6 @@ export interface LoginPageProps {}
 export interface RecoverPageProps {}
 
 function RecoverPage({}: RecoverPageProps) {
-	const router = useRouter();
-
 	const [phone, setPhone] = useState<string>('');
 
 	const handleChangePhone = (event: ChangeEvent<{ value: unknown }>) => {

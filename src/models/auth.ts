@@ -25,6 +25,12 @@ export interface UpdateLoad {
 	img_url?: File;
 }
 
+export interface UpdatePwdUser {
+	_id: string;
+	pwdOld: string;
+	newPwd: string;
+}
+
 export interface ProfileUserLoad {
 	_id: string;
 	first_name: string;
